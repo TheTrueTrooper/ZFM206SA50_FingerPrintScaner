@@ -1,0 +1,6 @@
+C:\Users\Angelo's Tower PC\source\repos\ZFM206SA50_FingerPrintScaner\ZFM206SA50_FingerPrintScaner\bin\Debug\ZFM206SA50_FingerPrintScaner.dll
+C:\Users\Angelo's Tower PC\source\repos\ZFM206SA50_FingerPrintScaner\ZFM206SA50_FingerPrintScaner\bin\Debug\ZFM206SA50_FingerPrintScaner.pdb
+C:\Users\Angelo's Tower PC\source\repos\ZFM206SA50_FingerPrintScaner\ZFM206SA50_FingerPrintScaner\obj\Debug\ZFM206SA50_FingerPrintScaner.csprojAssemblyReference.cache
+C:\Users\Angelo's Tower PC\source\repos\ZFM206SA50_FingerPrintScaner\ZFM206SA50_FingerPrintScaner\obj\Debug\ZFM206SA50_FingerPrintScaner.csproj.CoreCompileInputs.cache
+C:\Users\Angelo's Tower PC\source\repos\ZFM206SA50_FingerPrintScaner\ZFM206SA50_FingerPrintScaner\obj\Debug\ZFM206SA50_FingerPrintScaner.dll
+C:\Users\Angelo's Tower PC\source\repos\ZFM206SA50_FingerPrintScaner\ZFM206SA50_FingerPrintScaner\obj\Debug\ZFM206SA50_FingerPrintScaner.pdb

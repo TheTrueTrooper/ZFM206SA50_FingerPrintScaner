@@ -1,0 +1,10 @@
+C:\Users\Angelo's Tower PC\source\repos\ZFM206SA50_FingerPrintScaner\FingerPrintReaderTestConsole\bin\Debug\FingerPrintReaderTestConsole.exe.config
+C:\Users\Angelo's Tower PC\source\repos\ZFM206SA50_FingerPrintScaner\FingerPrintReaderTestConsole\bin\Debug\FingerPrintReaderTestConsole.exe
+C:\Users\Angelo's Tower PC\source\repos\ZFM206SA50_FingerPrintScaner\FingerPrintReaderTestConsole\bin\Debug\FingerPrintReaderTestConsole.pdb
+C:\Users\Angelo's Tower PC\source\repos\ZFM206SA50_FingerPrintScaner\FingerPrintReaderTestConsole\obj\Debug\FingerPrintReaderTestConsole.csprojAssemblyReference.cache
+C:\Users\Angelo's Tower PC\source\repos\ZFM206SA50_FingerPrintScaner\FingerPrintReaderTestConsole\obj\Debug\FingerPrintReaderTestConsole.csproj.CoreCompileInputs.cache
+C:\Users\Angelo's Tower PC\source\repos\ZFM206SA50_FingerPrintScaner\FingerPrintReaderTestConsole\obj\Debug\FingerPrintReaderTestConsole.exe
+C:\Users\Angelo's Tower PC\source\repos\ZFM206SA50_FingerPrintScaner\FingerPrintReaderTestConsole\obj\Debug\FingerPrintReaderTestConsole.pdb
+C:\Users\Angelo's Tower PC\source\repos\ZFM206SA50_FingerPrintScaner\FingerPrintReaderTestConsole\bin\Debug\ZFM206SA50_FingerPrintScaner.dll
+C:\Users\Angelo's Tower PC\source\repos\ZFM206SA50_FingerPrintScaner\FingerPrintReaderTestConsole\bin\Debug\ZFM206SA50_FingerPrintScaner.pdb
+C:\Users\Angelo's Tower PC\source\repos\ZFM206SA50_FingerPrintScaner\FingerPrintReaderTestConsole\obj\Debug\FingerPrintReaderTestConsole.csproj.CopyComplete
