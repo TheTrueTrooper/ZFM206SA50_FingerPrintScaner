@@ -65,5 +65,24 @@ namespace ZFM206SA50_FingerPrintScaner
                 BaudRate = (BaudRates)Package.Data[16]
             };
         }
+
+        public override string ToString()
+        {
+            const string ReturnBase = "Finger Print Scanner Package Returned:\n" +
+                "For Device: {0}\n" +
+                "Status: {1}\n" +
+                "IsValid: {2}\n" +
+                "Status Register: {3}\n" +
+                "System Identifier Code: {4}\n" +
+                "Finger Libary Size: {5}\n" +
+                "Security Level: {6}\n" +
+                "Device Address From Status: {7}\n" +
+                "Data Package Size: {8}\n" +
+                "Baud Rate: {9}:\n";
+
+            return string.Format(ReturnBase, DeviceAddress.ToString("X4"), Status, Valid, StatusRegister.ToString("X4"), 
+                SystemIdentifierCode.ToString("X4"), FingerLibrarySize, SecurityLevel, DeviceAddressFromStatus.ToString("X4"),
+                DataPackageSize, BaudRate);
+        }
     }
 }

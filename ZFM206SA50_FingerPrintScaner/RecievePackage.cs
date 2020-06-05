@@ -33,5 +33,7 @@ namespace ZFM206SA50_FingerPrintScaner
                 CheckSum += Data[i];
             Valid = CheckSum == Check;
         }
+
+        
     }
 }

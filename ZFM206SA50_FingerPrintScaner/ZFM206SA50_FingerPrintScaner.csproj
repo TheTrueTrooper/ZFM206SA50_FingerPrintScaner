@@ -41,7 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BasicCommandReturn.cs" />
+    <Compile Include="Returns\BasicCommandReturn.cs" />
     <Compile Include="Enums\BaudRates.cs" />
     <Compile Include="Enums\CommandCodes.cs" />
     <Compile Include="Enums\PackageLength.cs" />
@@ -51,7 +51,7 @@
     <Compile Include="FingerPrintScaner.cs" />
     <Compile Include="Enums\Errors.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ReadSystemParamReturn.cs" />
+    <Compile Include="Returns\ReadSystemParamReturn.cs" />
     <Compile Include="RecievePackage.cs" />
   </ItemGroup>
   <ItemGroup>
