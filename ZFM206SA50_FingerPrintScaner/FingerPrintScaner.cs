@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO.Ports;
 using ZFM206SA50_FingerPrintScaner.Enums;
+using System.IO;
 
 namespace ZFM206SA50_FingerPrintScaner
 {
@@ -110,6 +111,54 @@ namespace ZFM206SA50_FingerPrintScaner
             return new RecievePackage(PID, Address, Data, CheckSum);
         }
 
+        StreamReturn GetStream()
+        {
+            StreamReturn Return = GetReturn();
+            RecievePackage Chunk;
+            //int Pointer = 0;
+            do
+            {
+                Chunk = GetReturn();
+                Return.Stream.Write(Chunk.Data, 0, Chunk.Data.Length - 2);
+                //Return.Stream.Position = 0;
+                //Pointer += Chunk.Data.Length;
+            } while (Chunk.PakageType == PIDs.DataPacket);
+            return Return;
+        }
+
+        void SendDataStream(byte[] Data, PackageLength Length = PackageLength.LengthOf128)
+        {
+            if (!Enum.IsDefined(typeof(PackageLength), Length))
+                throw new Exception("Lenthis not a valid length");
+            MemoryStream DataStream = new MemoryStream(Data);
+            DataStream.Position = 0;
+            int DataSize = 128;
+            switch(Length)
+            {
+                case PackageLength.LengthOf32:
+                    DataSize = 32;
+                    break;
+                case PackageLength.LengthOf64:
+                    DataSize = 64;
+                    break;
+                case PackageLength.LengthOf128:
+                    DataSize = 128;
+                    break;
+                case PackageLength.LengthOf256:
+                    DataSize = 256;
+                    break;
+            }
+            byte[] Chunk = new byte[DataSize];
+            while (DataStream.Length - DataStream.Position < DataSize)
+            {
+                DataStream.Read(Chunk, 0, Chunk.Length);
+                SendPacket(PIDs.DataPacket, Chunk);
+            }
+            Chunk = new byte[DataStream.Length - DataStream.Position];
+            DataStream.Read(Chunk, 0, Chunk.Length);
+            SendPacket(PIDs.DataEndPacket, Chunk);
+        }
+
         void SendCommand(CommandCodes Command, byte[] Data = null)
         {
             byte[] Packet;
@@ -167,9 +216,9 @@ namespace ZFM206SA50_FingerPrintScaner
             return GetReturn();
         }
 
-        public ReadSystemParamReturn ReadValidTemplateNumber()
+        public ReadValidTemplateCountReturn ReadValidTemplateCount()
         {
-            SendCommand(CommandCodes.ReadValidTemplateNumber, new byte[] { });
+            SendCommand(CommandCodes.ReadValidTemplateCount, new byte[] { });
             return GetReturn();
         }
 
@@ -179,10 +228,29 @@ namespace ZFM206SA50_FingerPrintScaner
             return GetReturn();
         }
 
-        public BasicCommandReturn UploadImage()
+        public ImageReturn UploadImage()
         {
             SendCommand(CommandCodes.UploadImage, new byte[] { });
+            return GetStream();
+        }
+
+        public BasicCommandReturn DownloadImage(byte[] ImageAsBytes, PackageLength Length = PackageLength.LengthOf128)
+        {
+            SendCommand(CommandCodes.DownloadImage, new byte[] { });
+            BasicCommandReturn Return = GetReturn();
+            if(Return.Status != Errors.Success)
+                return Return;
+            SendDataStream(ImageAsBytes, Length);
+            return Return;
+        }
+
+        public BasicCommandReturn ClearOrEmptyImageTemplates()
+        {
+            SendCommand(CommandCodes.ClearOrEmptyImageTemplates, new byte[] { });
             return GetReturn();
         }
+
+        
+
     }
 }

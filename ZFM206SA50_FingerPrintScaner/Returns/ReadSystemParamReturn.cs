@@ -23,31 +23,6 @@ namespace ZFM206SA50_FingerPrintScaner
 
         }
 
-        static ushort GetU16(byte[] Data, int IndexStart)
-        {
-            if (BitConverter.IsLittleEndian)
-            {
-                byte[] Number = new byte[2];
-                Array.Copy(Data, IndexStart, Number, 0, 2);
-                Array.Reverse(Number);
-                return BitConverter.ToUInt16(Number, 0);
-            }
-            else
-                return BitConverter.ToUInt16(Data, IndexStart);
-        }
-
-        static uint GetU32(byte[] Data, int IndexStart)
-        {
-            if (BitConverter.IsLittleEndian)
-            {
-                byte[] Number = new byte[4];
-                Array.Copy(Data, IndexStart, Number, 0, 4);
-                Array.Reverse(Number);
-                return BitConverter.ToUInt32(Number, 0);
-            }
-            else
-                return BitConverter.ToUInt32(Data, IndexStart);
-        }
 
         public static implicit operator ReadSystemParamReturn(RecievePackage Package)
         {
@@ -56,12 +31,12 @@ namespace ZFM206SA50_FingerPrintScaner
                 DeviceAddress = Package.DeviceAddress,
                 Valid = Package.Valid,
                 Status = (Errors)Package.Data[0],
-                StatusRegister = GetU16(Package.Data, 1),
-                SystemIdentifierCode = GetU16(Package.Data, 3),
-                FingerLibrarySize = GetU16(Package.Data, 5),
+                StatusRegister = BitConverterHelpers.GetU16(Package.Data, 1),
+                SystemIdentifierCode = BitConverterHelpers.GetU16(Package.Data, 3),
+                FingerLibrarySize = BitConverterHelpers.GetU16(Package.Data, 5),
                 SecurityLevel = (SecurityLevels)Package.Data[8],
-                DeviceAddressFromStatus = GetU32(Package.Data, 9),
-                DataPackageSize = (PackageLength)14,
+                DeviceAddressFromStatus = BitConverterHelpers.GetU32(Package.Data, 9),
+                DataPackageSize = (PackageLength)Package.Data[14],
                 BaudRate = (BaudRates)Package.Data[16]
             };
         }

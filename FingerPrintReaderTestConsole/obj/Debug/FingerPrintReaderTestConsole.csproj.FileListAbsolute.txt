@@ -17,3 +17,5 @@ C:\Users\sovie\source\repos\ZFM206SA50_FingerPrintScaner\FingerPrintReaderTestCo
 C:\Users\sovie\source\repos\ZFM206SA50_FingerPrintScaner\FingerPrintReaderTestConsole\obj\Debug\FingerPrintReaderTestConsole.csproj.CopyComplete
 C:\Users\sovie\source\repos\ZFM206SA50_FingerPrintScaner\FingerPrintReaderTestConsole\obj\Debug\FingerPrintReaderTestConsole.exe
 C:\Users\sovie\source\repos\ZFM206SA50_FingerPrintScaner\FingerPrintReaderTestConsole\obj\Debug\FingerPrintReaderTestConsole.pdb
+C:\Users\Angelo's Tower PC\source\repos\ZFM206SA50_FingerPrintScaner\FingerPrintReaderTestConsole\obj\Debug\FingerPrintReaderTestConsole.Form1.resources
+C:\Users\Angelo's Tower PC\source\repos\ZFM206SA50_FingerPrintScaner\FingerPrintReaderTestConsole\obj\Debug\FingerPrintReaderTestConsole.csproj.GenerateResource.cache

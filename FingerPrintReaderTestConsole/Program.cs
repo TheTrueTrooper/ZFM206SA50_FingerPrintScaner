@@ -5,6 +5,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ZFM206SA50_FingerPrintScaner;
+using System.ComponentModel;
+using System.Drawing;
+using System.Windows.Forms;
 //using System.IO.Ports;
 
 namespace FingerPrintReaderTestConsole
@@ -33,7 +36,7 @@ namespace FingerPrintReaderTestConsole
             //Console.ReadKey();
             #endregion
 
-            FingerPrintScaner Tester = new FingerPrintScaner("Com4");
+            FingerPrintScaner Tester = new FingerPrintScaner(Settings.ComPort);
             //BasicCommandReturn Package = 
             Tester.InitHandShake();
             //ReadSystemParamReturn Status = Tester.ReadSystemParam();
@@ -50,21 +53,34 @@ namespace FingerPrintReaderTestConsole
             //}
             #endregion
 
+            string ImageString = Settings.TestImage;
+            byte[] TestImage = new byte[ImageString.Length / 2];
+            for (int i = 0; i < ImageString.Length/2; i++)
+            {
+                TestImage[i] = Convert.ToByte(ImageString.Substring(i * 2, 2), 16);
+            }
+
             const ConsoleKey ScanFingerKey = ConsoleKey.S;
             const ConsoleKey ReadSystemParamKey = ConsoleKey.Q;
             const ConsoleKey UploadImageFingerKey = ConsoleKey.W;
+            const ConsoleKey SetAddressKey = ConsoleKey.T;
+            const ConsoleKey ReadValidTemplateCountKey = ConsoleKey.A;
+            const ConsoleKey ClearOrEmptyImageTemplatesKey = ConsoleKey.G;
             const ConsoleKey InitKey = ConsoleKey.R;
             string MenuMessage = $"Menu options are as follows:\n" +
                 $"{ScanFingerKey}: For scanning the finger to generate a image.\n" +
                 $"{UploadImageFingerKey}: For uploading last scanned finger image.\n" +
                 $"{ReadSystemParamKey}: For reading system parameters.\n" +
-                $"{InitKey}: For to go back through the init.";
+                $"{ReadValidTemplateCountKey}: For getting count of valid templates.\n" +
+                $"{ClearOrEmptyImageTemplatesKey}: For clearing out or deleting all of the Image Templates.\n" +
+                $"{InitKey}: For repeating back through the init.\n" +
+                $"{SetAddressKey}: For to Set a new address";
 
             const string ReturnMessage = "\n{0} Command returned:\n{1}Press any key to continue!";
 
             bool Exit = false;
 
-            while(!Exit)
+            while (!Exit)
             {
                 Console.Clear();
                 Console.WriteLine(MenuMessage);
@@ -74,7 +90,7 @@ namespace FingerPrintReaderTestConsole
                     case InitKey:
                         {
                             BasicCommandReturn Package = Tester.InitHandShake();
-                            Console.WriteLine(ReturnMessage, "Generate Image", Package);
+                            Console.WriteLine(ReturnMessage, "Init Hand Shake", Package);
                             Console.ReadKey();
                         }
                         break;
@@ -82,6 +98,13 @@ namespace FingerPrintReaderTestConsole
                         {
                             BasicCommandReturn Package = Tester.GenerateImage();
                             Console.WriteLine(ReturnMessage, "Generate Image", Package);
+                            Console.ReadKey();
+                        }
+                        break;
+                    case ClearOrEmptyImageTemplatesKey:
+                        {
+                            BasicCommandReturn Package = Tester.ClearOrEmptyImageTemplates();
+                            Console.WriteLine(ReturnMessage, "Clear Or Empty Image Templates", Package);
                             Console.ReadKey();
                         }
                         break;
@@ -94,14 +117,55 @@ namespace FingerPrintReaderTestConsole
                         break;
                     case UploadImageFingerKey:
                         {
-                            BasicCommandReturn Package = Tester.UploadImage();
-                            Console.WriteLine(ReturnMessage, "Read System Parameter", Package);
-                            Console.WriteLine("Image Data is as follows:");
-                            bool Run = true;
-                            while(Run)
+                            ImageReturn Package = Tester.UploadImage();
+                            Console.WriteLine(ReturnMessage, "Upload Image Finger", Package);
+                            Application.Run(new Form1(Package.Image));
+                            Console.ReadKey();
+                        }
+                        break;
+                    case ReadValidTemplateCountKey:
+                        {
+                            ReadValidTemplateCountReturn Package = Tester.ReadValidTemplateCount();
+                            Console.WriteLine(ReturnMessage, "Read Valid Template Count", Package);
+                            Console.ReadKey();
+                        }
+                        break;
+                    //case ReadValidTemplateCountKey:
+                    //    {
+                    //        ReadValidTemplateCountReturn Package = Tester.DownloadImage("");
+                    //        Console.WriteLine(ReturnMessage, "Read Valid Template Count", Package);
+                    //        Console.ReadKey();
+                    //    }
+                    //    break;
+                    case SetAddressKey:
+                        {
+                            Console.WriteLine("\nPlease enter a new address via 4 hex digits.");
+                            bool Succes = false;
+                            uint NewAddress = 0;
+                            do
                             {
-                                Console.Write(((byte)Tester.SerialPort.ReadByte()).ToString("X2"));
-                            }
+                                string HexNumString = "";
+                                HexNumString += Console.ReadKey().KeyChar;
+                                HexNumString += Console.ReadKey().KeyChar;
+                                HexNumString += Console.ReadKey().KeyChar;
+                                HexNumString += Console.ReadKey().KeyChar;
+                                HexNumString += Console.ReadKey().KeyChar;
+                                HexNumString += Console.ReadKey().KeyChar;
+                                HexNumString += Console.ReadKey().KeyChar;
+                                HexNumString += Console.ReadKey().KeyChar;
+                                try
+                                {
+                                    NewAddress = uint.Parse(HexNumString, System.Globalization.NumberStyles.HexNumber);
+                                    Succes = true;
+                                }
+                                catch
+                                {
+                                    Console.WriteLine("\nOpps! That is not a valid hex number with 1-F in the digits.");
+                                    Succes = false;
+                                }
+                            } while (!Succes);
+                            BasicCommandReturn Package = Tester.SetAddress(NewAddress);
+                            Console.WriteLine(ReturnMessage, "Set Address", Package);
                             Console.ReadKey();
                         }
                         break;
@@ -110,10 +174,7 @@ namespace FingerPrintReaderTestConsole
             }
             //Package = Tester.GenerateImage();
             //Package = Tester.UploadImage();
-            //while(true)
-            //{
-            //    Console.Write(((byte)Tester.SerialPort.ReadByte()).ToString("X2"));
-            //}
+            
         }
     }
 }

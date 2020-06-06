@@ -33,6 +33,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -41,6 +42,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BitConverterHelpers.cs" />
+    <Compile Include="Returns\ReadValidTemplateCountReturn.cs" />
+    <Compile Include="Returns\ImageReturn.cs" />
     <Compile Include="Returns\BasicCommandReturn.cs" />
     <Compile Include="Enums\BaudRates.cs" />
     <Compile Include="Enums\CommandCodes.cs" />
@@ -53,6 +57,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Returns\ReadSystemParamReturn.cs" />
     <Compile Include="RecievePackage.cs" />
+    <Compile Include="Returns\StreamReturn.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ZFM-user-manualV15.pdf" />
