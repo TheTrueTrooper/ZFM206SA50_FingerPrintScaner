@@ -51,12 +51,14 @@ namespace FingerPrintReaderTestConsole
             #endregion
 
             const ConsoleKey ScanFingerKey = ConsoleKey.S;
-            const ConsoleKey ReadSystemParam = ConsoleKey.Q;
+            const ConsoleKey ReadSystemParamKey = ConsoleKey.Q;
             const ConsoleKey UploadImageFingerKey = ConsoleKey.W;
+            const ConsoleKey InitKey = ConsoleKey.R;
             string MenuMessage = $"Menu options are as follows:\n" +
                 $"{ScanFingerKey}: For scanning the finger to generate a image.\n" +
                 $"{UploadImageFingerKey}: For uploading last scanned finger image.\n" +
-                $"{ReadSystemParam}: For reading system parameters";
+                $"{ReadSystemParamKey}: For reading system parameters.\n" +
+                $"{InitKey}: For to go back through the init.";
 
             const string ReturnMessage = "\n{0} Command returned:\n{1}Press any key to continue!";
 
@@ -69,6 +71,13 @@ namespace FingerPrintReaderTestConsole
                 ConsoleKey Key = Console.ReadKey().Key;
                 switch(Key)
                 {
+                    case InitKey:
+                        {
+                            BasicCommandReturn Package = Tester.InitHandShake();
+                            Console.WriteLine(ReturnMessage, "Generate Image", Package);
+                            Console.ReadKey();
+                        }
+                        break;
                     case ScanFingerKey:
                         {
                             BasicCommandReturn Package = Tester.GenerateImage();
@@ -76,11 +85,23 @@ namespace FingerPrintReaderTestConsole
                             Console.ReadKey();
                         }
                         break;
-
-                    case ReadSystemParam:
+                    case ReadSystemParamKey:
                         {
                             ReadSystemParamReturn Package = Tester.ReadSystemParam();
                             Console.WriteLine(ReturnMessage, "Read System Parameter", Package);
+                            Console.ReadKey();
+                        }
+                        break;
+                    case UploadImageFingerKey:
+                        {
+                            BasicCommandReturn Package = Tester.UploadImage();
+                            Console.WriteLine(ReturnMessage, "Read System Parameter", Package);
+                            Console.WriteLine("Image Data is as follows:");
+                            bool Run = true;
+                            while(Run)
+                            {
+                                Console.Write(((byte)Tester.SerialPort.ReadByte()).ToString("X2"));
+                            }
                             Console.ReadKey();
                         }
                         break;
