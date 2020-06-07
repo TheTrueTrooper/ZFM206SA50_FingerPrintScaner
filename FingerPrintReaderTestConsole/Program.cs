@@ -119,7 +119,7 @@ namespace FingerPrintReaderTestConsole
                         {
                             ImageReturn Package = Tester.UploadImage();
                             Console.WriteLine(ReturnMessage, "Upload Image Finger", Package);
-                            Application.Run(new Form1(Package.Image));
+                            Application.Run(new Form1(Package.GrayScaleImage));
                             Console.ReadKey();
                         }
                         break;

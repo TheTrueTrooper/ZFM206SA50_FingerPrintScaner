@@ -14,7 +14,7 @@ namespace ZFM206SA50_FingerPrintScaner
         const int ImageWidth = 256;
         const int ImageHieght = 288;
 
-        public Image Image { private set; get; }
+        public Image GrayScaleImage { private set; get; }
 
         public byte[] ImageBuffer { private set; get; }
 
@@ -57,7 +57,7 @@ namespace ZFM206SA50_FingerPrintScaner
                 Valid = StreamReturn.Valid,
                 Status = StreamReturn.Status,
                 ImageBuffer = ImageBuffer,
-                Image = Image
+                GrayScaleImage = Image
             };
         }
 

@@ -43,6 +43,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BitConverterHelpers.cs" />
+    <Compile Include="Enums\SystemStatus.cs" />
     <Compile Include="Returns\ReadValidTemplateCountReturn.cs" />
     <Compile Include="Returns\ImageReturn.cs" />
     <Compile Include="Returns\BasicCommandReturn.cs" />

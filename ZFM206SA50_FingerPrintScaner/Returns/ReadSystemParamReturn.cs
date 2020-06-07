@@ -9,7 +9,7 @@ namespace ZFM206SA50_FingerPrintScaner
 {
     public class ReadSystemParamReturn : BasicCommandReturn
     {
-        public ushort StatusRegister;
+        public SystemStatus StatusRegister;
         public ushort SystemIdentifierCode;
         public ushort FingerLibrarySize;
         public SecurityLevels SecurityLevel;
@@ -31,7 +31,7 @@ namespace ZFM206SA50_FingerPrintScaner
                 DeviceAddress = Package.DeviceAddress,
                 Valid = Package.Valid,
                 Status = (Errors)Package.Data[0],
-                StatusRegister = BitConverterHelpers.GetU16(Package.Data, 1),
+                StatusRegister = (SystemStatus)BitConverterHelpers.GetU16(Package.Data, 1),
                 SystemIdentifierCode = BitConverterHelpers.GetU16(Package.Data, 3),
                 FingerLibrarySize = BitConverterHelpers.GetU16(Package.Data, 5),
                 SecurityLevel = (SecurityLevels)Package.Data[8],
@@ -55,7 +55,7 @@ namespace ZFM206SA50_FingerPrintScaner
                 "Data Package Size: {8}\n" +
                 "Baud Rate: {9}:\n";
 
-            return string.Format(ReturnBase, DeviceAddress.ToString("X4"), Status, Valid, StatusRegister.ToString("X4"), 
+            return string.Format(ReturnBase, DeviceAddress.ToString("X4"), Status, Valid, StatusRegister, 
                 SystemIdentifierCode.ToString("X4"), FingerLibrarySize, SecurityLevel, DeviceAddressFromStatus.ToString("X4"),
                 DataPackageSize, BaudRate);
         }
