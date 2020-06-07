@@ -149,7 +149,7 @@ namespace ZFM206SA50_FingerPrintScaner
                     break;
             }
             byte[] Chunk = new byte[DataSize];
-            while (DataStream.Length - DataStream.Position < DataSize)
+            while (DataStream.Length - DataStream.Position >= DataSize)
             {
                 DataStream.Read(Chunk, 0, Chunk.Length);
                 SendPacket(PIDs.DataPacket, Chunk);

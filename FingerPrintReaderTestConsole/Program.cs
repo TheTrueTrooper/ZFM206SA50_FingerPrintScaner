@@ -53,7 +53,7 @@ namespace FingerPrintReaderTestConsole
             //}
             #endregion
 
-            string ImageString = Settings.TestImage;
+            string ImageString = Settings.TestImageBlankWhite;
             byte[] TestImage = new byte[ImageString.Length / 2];
             for (int i = 0; i < ImageString.Length/2; i++)
             {
@@ -63,6 +63,7 @@ namespace FingerPrintReaderTestConsole
             const ConsoleKey ScanFingerKey = ConsoleKey.S;
             const ConsoleKey ReadSystemParamKey = ConsoleKey.Q;
             const ConsoleKey UploadImageFingerKey = ConsoleKey.W;
+            const ConsoleKey DownloadImageFingerKey = ConsoleKey.Z;
             const ConsoleKey SetAddressKey = ConsoleKey.T;
             const ConsoleKey ReadValidTemplateCountKey = ConsoleKey.A;
             const ConsoleKey ClearOrEmptyImageTemplatesKey = ConsoleKey.G;
@@ -70,6 +71,7 @@ namespace FingerPrintReaderTestConsole
             string MenuMessage = $"Menu options are as follows:\n" +
                 $"{ScanFingerKey}: For scanning the finger to generate a image.\n" +
                 $"{UploadImageFingerKey}: For uploading last scanned finger image.\n" +
+                $"{DownloadImageFingerKey}: For downloading image to replace last scanned finger image.\n" +
                 $"{ReadSystemParamKey}: For reading system parameters.\n" +
                 $"{ReadValidTemplateCountKey}: For getting count of valid templates.\n" +
                 $"{ClearOrEmptyImageTemplatesKey}: For clearing out or deleting all of the Image Templates.\n" +
@@ -118,8 +120,15 @@ namespace FingerPrintReaderTestConsole
                     case UploadImageFingerKey:
                         {
                             ImageReturn Package = Tester.UploadImage();
-                            Console.WriteLine(ReturnMessage, "Upload Image Finger", Package);
+                            Console.WriteLine(ReturnMessage, "Upload Image", Package);
                             Application.Run(new Form1(Package.GrayScaleImage));
+                            Console.ReadKey();
+                        }
+                        break;
+                    case DownloadImageFingerKey:
+                        {
+                            BasicCommandReturn Package = Tester.DownloadImage(TestImage);
+                            Console.WriteLine(ReturnMessage, "Download Image", Package);
                             Console.ReadKey();
                         }
                         break;
