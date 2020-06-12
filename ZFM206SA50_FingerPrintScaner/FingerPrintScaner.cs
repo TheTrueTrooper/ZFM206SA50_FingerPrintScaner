@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.IO.Ports;
 using ZFM206SA50_FingerPrintScaner.Enums;
 using System.IO;
+using System.Drawing;
 
 namespace ZFM206SA50_FingerPrintScaner
 {
@@ -234,15 +235,29 @@ namespace ZFM206SA50_FingerPrintScaner
             return GetStream();
         }
 
-        public BasicCommandReturn DownloadImage(byte[] ImageAsBytes, PackageLength Length = PackageLength.LengthOf128)
+        public BasicCommandReturn DownloadImage(Image Image, PackageLength Length = PackageLength.LengthOf128)
         {
+            if (Image.Height != StaticImageHelpers.ImageHieght && Image.Width != StaticImageHelpers.ImageWidth)
+                throw new Exception("Image is not the correct size. Image bust be 8 bits (one byte) per pixel in a 256 by 288 pixel canvas for 73,728 pixels and is assumed to be grey scaled image.");
+
+            byte[] ImageBytes = StaticImageHelpers.GetBytesFromImage(Image);
+            return DownloadImage(ImageBytes, PackageLength.LengthOf128);
+        }
+
+        public BasicCommandReturn DownloadImage(byte[] ImageBitmapAsBytes, PackageLength Length = PackageLength.LengthOf128, bool AlreadyCompressed = false)
+        {
+            if(!AlreadyCompressed)
+                ImageBitmapAsBytes = StaticImageHelpers.GetCompressedImageBytes(ImageBitmapAsBytes);
+
             SendCommand(CommandCodes.DownloadImage, new byte[] { });
             BasicCommandReturn Return = GetReturn();
-            if(Return.Status != Errors.Success)
+            if (Return.Status != Errors.Success)
                 return Return;
-            SendDataStream(ImageAsBytes, Length);
+            SendDataStream(ImageBitmapAsBytes, Length);
             return Return;
         }
+
+
 
         public BasicCommandReturn ClearOrEmptyImageTemplates()
         {

@@ -14,6 +14,7 @@ namespace FingerPrintReaderTestConsole
 {
     class Program
     {
+        [STAThread]
         static void Main(string[] args)
         {
             #region OldTestCode1
@@ -127,9 +128,22 @@ namespace FingerPrintReaderTestConsole
                         break;
                     case DownloadImageFingerKey:
                         {
-                            BasicCommandReturn Package = Tester.DownloadImage(TestImage);
-                            Console.WriteLine(ReturnMessage, "Download Image", Package);
-                            Console.ReadKey();
+                            using (OpenFileDialog OFD = new OpenFileDialog())
+                            {
+                                if (OFD.ShowDialog() == DialogResult.OK)
+                                {
+                                    if (!OFD.CheckPathExists)
+                                    {
+                                        MessageBox.Show("Not Valid path");
+                                    }
+                                    else
+                                    {
+                                        BasicCommandReturn Package = Tester.DownloadImage(new Bitmap(OFD.FileName));
+                                        Console.WriteLine(ReturnMessage, "Download Image", Package);
+                                        Console.ReadKey();
+                                    }
+                                }
+                            }
                         }
                         break;
                     case ReadValidTemplateCountKey:

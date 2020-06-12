@@ -59,6 +59,7 @@
     <Compile Include="Returns\ReadSystemParamReturn.cs" />
     <Compile Include="RecievePackage.cs" />
     <Compile Include="Returns\StreamReturn.cs" />
+    <Compile Include="StaticImageHelpers.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ZFM-user-manualV15.pdf" />
