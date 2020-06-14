@@ -82,21 +82,6 @@ namespace ZFM206SA50_FingerPrintScaner
                 }
 
             return Return;
-            //byte[] RawUncompressedImageBuffer = new byte[Image.Width * Image.Height];
-
-            //BitmapData ImageData = Image.LockBits(new Rectangle(0, 0,
-            //                                                    Image.Width,
-            //                                                    Image.Height),
-            //                                      ImageLockMode.ReadOnly,
-            //                                      Image.PixelFormat);
-
-            //IntPtr pNative = ImageData.Scan0;
-
-            //Marshal.Copy(pNative, RawUncompressedImageBuffer, 0, RawUncompressedImageBuffer.Length);
-
-            //Image.UnlockBits(ImageData);
-
-            //return RawUncompressedImageBuffer;
         }
     }
 }

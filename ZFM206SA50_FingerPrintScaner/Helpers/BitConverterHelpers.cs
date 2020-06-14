@@ -33,5 +33,21 @@ namespace ZFM206SA50_FingerPrintScaner
             else
                 return BitConverter.ToUInt32(Data, IndexStart);
         }
+
+        internal static byte[] GetBytes32(uint Number)
+        {
+            byte[] NumbersArray = BitConverter.GetBytes(Number);
+            if (BitConverter.IsLittleEndian)
+                Array.Reverse(NumbersArray);
+            return NumbersArray;
+        }
+
+        internal static byte[] GetBytes16(ushort Number)
+        {
+            byte[] NumbersArray = BitConverter.GetBytes(Number);
+            if (BitConverter.IsLittleEndian)
+                Array.Reverse(NumbersArray);
+            return NumbersArray;
+        }
     }
 }

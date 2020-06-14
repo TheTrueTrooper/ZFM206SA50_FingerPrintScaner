@@ -10,7 +10,7 @@ using System.Drawing;
 
 namespace ZFM206SA50_FingerPrintScaner
 {
-    public class FingerPrintScaner
+    public class FingerPrintScaner : IDisposable
     {
         const int DefaultBaudRate = 57600;
 
@@ -20,22 +20,87 @@ namespace ZFM206SA50_FingerPrintScaner
         readonly byte[] Header = new byte[] { 0xEF, 0x01 };
 
         //default is 0xFFFFFFFF
-        byte[] Address = new byte[] { 0xFF, 0xFF, 0xFF, 0xFF };
+        byte[] AddressBytes = new byte[] { 0xFF, 0xFF, 0xFF, 0xFF };
 
+        bool IsDisposed = false;
 
-        public FingerPrintScaner(string ComPort, uint? Address = null, int BaudRate = DefaultBaudRate)
+        public ulong Address => BitConverterHelpers.GetU16(AddressBytes, 0);
+
+        public PackageLength DataPackageChunkSize { get; private set; }
+
+        public BaudRates BaudRate = BaudRates.BaudRateOf57600;
+
+        public FingerPrintScaner(string ComPort, uint? Address = null, BaudRates BaudRate = BaudRates.BaudRateOf57600, PackageLength DataPackageChunkSize = PackageLength.LengthOf128)
         {
+            if (!Enum.IsDefined(typeof(BaudRates), BaudRate))
+                throw new Exception("BaudRate is not a valid baudrate!");
+            if (!Enum.IsDefined(typeof(PackageLength), DataPackageChunkSize))
+                throw new Exception("The chunk size is not a valid max chunk size for the device!");
+            int BaudRateValue = DefaultBaudRate;
+            switch(BaudRate)
+            {
+                case BaudRates.BaudRateOf9600:
+                    BaudRateValue = 9600;
+                    BaudRate = BaudRates.BaudRateOf9600;
+                    break;
+                case BaudRates.BaudRateOf19200:
+                    BaudRateValue = 19200;
+                    BaudRate = BaudRates.BaudRateOf19200;
+                    break;
+                case BaudRates.BaudRateOf28800:
+                    BaudRateValue = 28800;
+                    BaudRate = BaudRates.BaudRateOf28800;
+                    break;
+                case BaudRates.BaudRateOf38400:
+                    BaudRateValue = 38400;
+                    BaudRate = BaudRates.BaudRateOf38400;
+                    break;
+                case BaudRates.BaudRateOf48000:
+                    BaudRateValue = 48000;
+                    BaudRate = BaudRates.BaudRateOf48000;
+                    break;
+                case BaudRates.BaudRateOf57600:
+                    BaudRateValue = 57600;
+                    BaudRate = BaudRates.BaudRateOf57600;
+                    break;
+                case BaudRates.BaudRateOf67200:
+                    BaudRateValue = 67200;
+                    BaudRate = BaudRates.BaudRateOf67200;
+                    break;
+                case BaudRates.BaudRateOf76800:
+                    BaudRateValue = 76800;
+                    BaudRate = BaudRates.BaudRateOf76800;
+                    break;
+                case BaudRates.BaudRateOf86400:
+                    BaudRateValue = 86400;
+                    BaudRate = BaudRates.BaudRateOf86400;
+                    break;
+                case BaudRates.BaudRateOf96000:
+                    BaudRateValue = 96000;
+                    BaudRate = BaudRates.BaudRateOf96000;
+                    break;
+                case BaudRates.BaudRateOf105600:
+                    BaudRateValue = 105600;
+                    BaudRate = BaudRates.BaudRateOf105600;
+                    break;
+                case BaudRates.BaudRateOf115200:
+                    BaudRateValue = 115200;
+                    BaudRate = BaudRates.BaudRateOf115200;
+                    break;
+            }
+
             if (Address != null)
             {
-                this.Address = BitConverter.GetBytes(Address.Value);
-                if (BitConverter.IsLittleEndian)
-                    Array.Reverse(this.Address);
+                this.AddressBytes = BitConverterHelpers.GetBytes32(Address.Value);
             }
-            SerialPort = new SerialPort(ComPort, BaudRate, Parity.None, 8, StopBits.One);
+
+            this.DataPackageChunkSize = DataPackageChunkSize;
+            SerialPort = new SerialPort(ComPort, BaudRateValue, Parity.None, 8, StopBits.One);
 
             SerialPort.Open();
-        } 
+        }
 
+        #region BaseCommunicationMethods
         void SendPacket(PIDs Type, byte[] Data)
         {
             byte[] Packet = new byte[Data.Length + 11];
@@ -48,7 +113,7 @@ namespace ZFM206SA50_FingerPrintScaner
             //mark packet start with header
             Array.Copy(Header, Packet, Header.Length);
             //Mark dest with address
-            Array.Copy(Address, 0, Packet, 2, Address.Length);
+            Array.Copy(AddressBytes, 0, Packet, 2, AddressBytes.Length);
             //Add identifier for pakage type
             Packet[6] = (byte)Type;
             //Set the length of the data.
@@ -127,14 +192,14 @@ namespace ZFM206SA50_FingerPrintScaner
             return Return;
         }
 
-        void SendDataStream(byte[] Data, PackageLength Length = PackageLength.LengthOf128)
+        void SendDataStream(byte[] Data, PackageLength ChunkLength = PackageLength.LengthOf128)
         {
-            if (!Enum.IsDefined(typeof(PackageLength), Length))
+            if (!Enum.IsDefined(typeof(PackageLength), ChunkLength))
                 throw new Exception("Lenthis not a valid length");
             MemoryStream DataStream = new MemoryStream(Data);
             DataStream.Position = 0;
             int DataSize = 128;
-            switch(Length)
+            switch(ChunkLength)
             {
                 case PackageLength.LengthOf32:
                     DataSize = 32;
@@ -173,7 +238,9 @@ namespace ZFM206SA50_FingerPrintScaner
             }
             SendPacket(PIDs.CommandPacket, Packet);
         }
+        #endregion
 
+        #region BasicSystemCommandsMethods
         public BasicCommandReturn InitHandShake()
         {
             SendCommand(CommandCodes.InitHandShake, new byte[] { 0x00 });
@@ -182,11 +249,9 @@ namespace ZFM206SA50_FingerPrintScaner
 
         public BasicCommandReturn SetAddress(uint Address)
         {
-            byte[] NewAddress = BitConverter.GetBytes(Address);
-            if (BitConverter.IsLittleEndian)
-                Array.Reverse(NewAddress);
+            byte[] NewAddress = BitConverterHelpers.GetBytes32(Address);
             SendCommand(CommandCodes.SetAddress, NewAddress);
-            this.Address = NewAddress;
+            this.AddressBytes = NewAddress;
             return GetReturn();
         }
 
@@ -196,76 +261,275 @@ namespace ZFM206SA50_FingerPrintScaner
             return GetReturn();
         }
 
-        public BasicCommandReturn SetSystemBaudRate(BaudRates Rate)
+        public BasicCommandReturn SetSystemBaudRate(BaudRates BaudRate)
         {
-            return SetSystemParam(SystemParam.BaudRate, (byte)Rate);
+            if (!Enum.IsDefined(typeof(BaudRates), BaudRate))
+                throw new Exception("BaudRate is not a valid baudrate!");
+            this.BaudRate = BaudRate;
+            return SetSystemParam(SystemParam.BaudRate, (byte)BaudRate);
         }
 
         public BasicCommandReturn SetSystemSecurityLevel(SecurityLevels SecurityLevel)
         {
+            if (!Enum.IsDefined(typeof(SecurityLevels), SecurityLevel))
+                throw new Exception("The Security Level is not a valid level for the device!");
             return SetSystemParam(SystemParam.SecurityLevel, (byte)SecurityLevel);
         }
 
-        public BasicCommandReturn SetSystemPackageLengthg(PackageLength Length)
+        public BasicCommandReturn SetSystemPackageChunkLength(PackageLength DataPackageChunkSize)
         {
-            return SetSystemParam(SystemParam.DataPackageLength, (byte)Length);
+            if (!Enum.IsDefined(typeof(PackageLength), DataPackageChunkSize))
+                throw new Exception("The chunk size is not a valid max chunk size for the device!");
+            this.DataPackageChunkSize = DataPackageChunkSize;
+            return SetSystemParam(SystemParam.DataPackageLength, (byte)DataPackageChunkSize);
         }
 
         public ReadSystemParamReturn ReadSystemParam()
         {
-            SendCommand(CommandCodes.ReadSystParam, new byte[] { });
+            SendCommand(CommandCodes.ReadSystParam);
             return GetReturn();
         }
 
         public ReadValidTemplateCountReturn ReadValidTemplateCount()
         {
-            SendCommand(CommandCodes.ReadValidTemplateCount, new byte[] { });
+            SendCommand(CommandCodes.ReadValidTemplateCount);
             return GetReturn();
         }
+        #endregion
 
+        #region ImageCommandsMethods
         public BasicCommandReturn GenerateImage()
         {
-            SendCommand(CommandCodes.GenerateImage, new byte[] { });
+            SendCommand(CommandCodes.GenerateImage);
             return GetReturn();
         }
 
-        public ImageReturn UploadImage()
+        public ImageReturn UploadImageToPC()
         {
-            SendCommand(CommandCodes.UploadImage, new byte[] { });
+            SendCommand(CommandCodes.UploadImage);
             return GetStream();
         }
 
-        public BasicCommandReturn DownloadImage(Image Image, PackageLength Length = PackageLength.LengthOf128)
+        public BasicCommandReturn DownloadImageToSlave(Image Image, PackageLength ChunkLength = PackageLength.LengthOf128)
         {
             if (Image.Height != StaticImageHelpers.ImageHieght && Image.Width != StaticImageHelpers.ImageWidth)
                 throw new Exception("Image is not the correct size. Image bust be 8 bits (one byte) per pixel in a 256 by 288 pixel canvas for 73,728 pixels and is assumed to be grey scaled image.");
 
             byte[] ImageBytes = StaticImageHelpers.GetBytesFromImage(Image);
-            return DownloadImage(ImageBytes, PackageLength.LengthOf128);
+            return DownloadImageToSlave(ImageBytes, ChunkLength);
         }
 
-        public BasicCommandReturn DownloadImage(byte[] ImageBitmapAsBytes, PackageLength Length = PackageLength.LengthOf128, bool AlreadyCompressed = false)
+        public BasicCommandReturn DownloadImageToSlave(byte[] ImageBitmapAsBytes, PackageLength ChunkLength = PackageLength.LengthOf128, bool AlreadyCompressed = false)
         {
             if(!AlreadyCompressed)
                 ImageBitmapAsBytes = StaticImageHelpers.GetCompressedImageBytes(ImageBitmapAsBytes);
 
-            SendCommand(CommandCodes.DownloadImage, new byte[] { });
+            SendCommand(CommandCodes.DownloadImage);
             BasicCommandReturn Return = GetReturn();
             if (Return.Status != Errors.Success)
                 return Return;
-            SendDataStream(ImageBitmapAsBytes, Length);
+            SendDataStream(ImageBitmapAsBytes, ChunkLength);
             return Return;
         }
+        #endregion
 
-
-
-        public BasicCommandReturn ClearOrEmptyImageTemplates()
+        #region ImageTemplateOrCharactorCommandMethods
+        public BasicCommandReturn GenerateImageTemplate(ImageTemplateBuffers StoreAtBuffer = ImageTemplateBuffers.ImageTemplateBuffer2)
         {
-            SendCommand(CommandCodes.ClearOrEmptyImageTemplates, new byte[] { });
+            SendCommand(CommandCodes.GenerateImageTemplate, new byte[] { (byte)StoreAtBuffer });
             return GetReturn();
         }
 
-        
+        public BasicCommandReturn MergeOrRegenerateImageTemplate()
+        {
+            SendCommand(CommandCodes.RegenerateImageTemplate);
+            return GetReturn();
+        }
 
+        public StreamReturn UploadImageTemplateToPC(ImageTemplateBuffers UploadFromStoreBuffer)
+        {
+            SendCommand(CommandCodes.UploadImageTemplate, new byte[] { (byte)UploadFromStoreBuffer });
+            return GetStream();
+        }
+
+        public BasicCommandReturn DownLoadImageTemplateToSlave(ImageTemplateBuffers DownloadToStoreBuffer, byte[] ImageTemplateBitmapAsBytes, PackageLength ChunkLength = PackageLength.LengthOf128)
+        {
+            SendCommand(CommandCodes.UploadImageTemplate, new byte[] { (byte)DownloadToStoreBuffer });
+            BasicCommandReturn Return = GetReturn();
+            if (Return.Status != Errors.Success)
+                return Return;
+            SendDataStream(ImageTemplateBitmapAsBytes, ChunkLength);
+            return Return;
+        }
+
+        public BasicCommandReturn DownLoadImageTemplateToSlave(ImageTemplateBuffers DownloadToStoreBuffer, Stream ImageTemplateBitmapAsStream, PackageLength ChunkLength = PackageLength.LengthOf128)
+        {
+            MemoryStream ImageTemplateBitmapAsMemoryStream = new MemoryStream();
+            ImageTemplateBitmapAsStream.Position = 0;
+            ImageTemplateBitmapAsStream.CopyTo(ImageTemplateBitmapAsMemoryStream);
+            return DownLoadImageTemplateToSlave(DownloadToStoreBuffer, ImageTemplateBitmapAsMemoryStream.ToArray(), ChunkLength);
+        }
+
+        public BasicCommandReturn StoreOrSaveImageTemplateOnSlaveFlash(ImageTemplateBuffers StoreBufferToSaveToFlash, ushort PageIndex)
+        {
+            byte[] Index = BitConverterHelpers.GetBytes16(PageIndex);
+            SendCommand(CommandCodes.SaveOrStoreImageTemplate, new byte[] { (byte)StoreBufferToSaveToFlash, Index[0], Index[1] });
+            return GetReturn();
+        }
+
+        public BasicCommandReturn LoadImageTemplateFromSlaveFlash(ImageTemplateBuffers StoreBufferToSaveToFlash, ushort PageIndex)
+        {
+            byte[] Index = BitConverterHelpers.GetBytes16(PageIndex);
+            SendCommand(CommandCodes.LoadImageTemplate, new byte[] { (byte)StoreBufferToSaveToFlash, Index[0], Index[1] });
+            return GetReturn();
+        }
+
+        public BasicCommandReturn DeleteImageTemplateFromSlaveFlash(ImageTemplateBuffers StoreBufferToSaveToFlash, ushort PageIndex, ushort NumberOfPagesToDelete)
+        {
+            byte[] Index = BitConverterHelpers.GetBytes16(PageIndex);
+            byte[] Number = BitConverterHelpers.GetBytes16(NumberOfPagesToDelete);
+            SendCommand(CommandCodes.DeleteImageTemplate, new byte[] { (byte)StoreBufferToSaveToFlash, Index[0], Index[1], Number[0], Number[1] });
+            return GetReturn();
+        }
+
+        public BasicCommandReturn ClearOrEmptyImageTemplates()
+        {
+            SendCommand(CommandCodes.ClearOrEmptyImageTemplates);
+            return GetReturn();
+        }
+
+        public MatchReturn MatchTemplates()
+        {
+            SendCommand(CommandCodes.TryMatchImageTemplate);
+            return GetReturn();
+        }
+
+        public MatchReturn MatchTemplates(ImageTemplateBuffers StoreBufferToSaveToMatch, ushort StartAtPageIndex, ushort PageCount)
+        {
+            byte[] PageStartIndex = BitConverterHelpers.GetBytes16(StartAtPageIndex);
+            byte[] PageCountNumber = BitConverterHelpers.GetBytes16(PageCount);
+            SendCommand(CommandCodes.TryMatchAnyImageTemplate, new byte[] { (byte)StoreBufferToSaveToMatch, PageStartIndex[0], PageStartIndex[1], PageCountNumber[0], PageCountNumber[1] });
+            return GetReturn();
+        }
+        #endregion
+
+        #region OtherMiscCommands
+        public RandomNumberReturn GenerateRandomNumber()
+        {
+            SendCommand(CommandCodes.GenerateRandomNumber);
+            return GetReturn();
+        }
+
+        const byte PageSize = 32;
+        const byte NumberOfPages = 16;
+
+        public BasicCommandReturn RawWriteToNotePadOnSlave(byte NotePadPageIndex, byte[] Data)
+        {
+            if (Data == null)
+                throw new Exception("Data Passed is null. Did you want to write to the flash?");
+            if (NotePadPageIndex >= NumberOfPages)
+                throw new Exception($"Page number is greater than {NumberOfPages}. There are only {NumberOfPages} of memory avalible for for the notepad.");
+            if(Data.Length == PageSize)
+                throw new Exception($"Data Passed is not a full page. Writes of a raw nature must be a full {PageSize} byte page block size due to hardware restrictions.");
+            SendCommand(CommandCodes.WriteNotePad, new byte[] { NotePadPageIndex,
+                Data[0], Data[1], Data[2], Data[3], Data[4], Data[5], Data[6], Data[7],
+                Data[8], Data[9], Data[10], Data[11], Data[12], Data[13], Data[14], Data[15],
+                Data[16], Data[17], Data[18], Data[19], Data[20], Data[21], Data[22], Data[23],
+                Data[24], Data[25], Data[26], Data[27], Data[28], Data[29], Data[30], Data[31] });
+            return GetReturn();
+        }
+
+        public BasicCommandReturn WriteToNotePadOnSlave(byte NotePadPageIndex, byte[] Data)
+        {
+            if (Data == null)
+                throw new Exception("Data Passed is null. Did you want to write to the flash?");
+            if (Data.Length > PageSize)
+                throw new Exception($"Data Passed is too big. To write to a single page block the page must be less than {PageSize} bytes. Try breaking up your writes; however, note that there are only {NumberOfPages} pages or blocks.");
+            byte[] WriteBuffer = new byte[32] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+            Array.Copy(Data, WriteBuffer, Data.Length);
+            return RawWriteToNotePadOnSlave(NotePadPageIndex, WriteBuffer);
+        }
+
+        public BasicCommandReturn WriteToNotePadOnSlave(byte NotePadPageIndex, string String, Encoding Encoding = null)
+        {
+            if (Encoding == null)
+                Encoding = Encoding.ASCII;
+            byte[] Data = Encoding.GetBytes(String);
+            if (Data == null)
+                throw new Exception("Data passed is null. Did you want to write to the flash?");
+            if (Data.Length > PageSize)
+                throw new Exception($"Data of passed string is too big. To write to a single page block the page must be less than {PageSize} bytes. Try breaking up your writes or using a different ecoding; however, note that there are only {NumberOfPages} pages or blocks. Also note that the default encoding is ascii and is the smallest size.");
+            return WriteToNotePadOnSlave(NotePadPageIndex, Data);
+        }
+
+        public BasicCommandReturn WriteEntireNotePadOnSlave(string String, Encoding Encoding = null)
+        {
+            const short MaxSize = 512;
+            byte[] Data = Encoding.GetBytes(String);
+            if (Data.Length > MaxSize)
+                throw new Exception($"Data of passed string is too big. To write to the entire note the page must be less than {MaxSize} bytes. Try using a different ecoding or shorten your data. Also note that the default encoding is ascii and is the smallest size.");
+            MemoryStream DataStream = new MemoryStream(Data);
+            BasicCommandReturn Return;
+            byte Page = 0;
+            byte[] Chunk = new byte[PageSize];
+            while (DataStream.Length - DataStream.Position >= PageSize)
+            {
+                DataStream.Read(Chunk, 0, Chunk.Length);
+                Return = WriteToNotePadOnSlave(Page, Chunk);
+                Page++;
+                if (Return.Status != Errors.Success || !Return.Valid)
+                    return Return;
+            }
+            Chunk = new byte[DataStream.Length - DataStream.Position];
+            DataStream.Read(Chunk, 0, Chunk.Length);
+            Return = WriteToNotePadOnSlave(Page, Chunk);
+            return Return;
+        }
+
+        public ReadNotePadReturn ReadFromNotePadOnSlave(byte NotePadPageIndex)
+        {
+            if (NotePadPageIndex >= NumberOfPages)
+                throw new Exception($"Page number is greater than {NumberOfPages}. There are only {NumberOfPages} of memory avalible for for the notepad.");
+            SendCommand(CommandCodes.ReadNotePad, new byte[] { NotePadPageIndex });
+            return GetReturn();
+        }
+
+        public ReadNotePadReturn ReadEntireNotePadOnSlave()
+        {
+            ReadNotePadReturn Return = ReadFromNotePadOnSlave(0);
+            if (Return.Status != Errors.Success || !Return.Valid)
+                return Return;
+            byte[] CurrentString = Return.RawBytes;
+            for (byte Page = 1; Page < NumberOfPages; Page++)
+            {
+                Return = ReadFromNotePadOnSlave(Page);
+                if (Return.Status != Errors.Success || !Return.Valid)
+                {
+                    Return.RawBytes = CurrentString;
+                    return Return;
+                }
+                int Pointer = CurrentString.Length;
+                Array.Resize(ref CurrentString, CurrentString.Length + Return.RawBytes.Length);
+                Array.Copy(Return.RawBytes, 0, CurrentString, Pointer, Return.RawBytes.Length);
+            }
+            Return.RawBytes = CurrentString;
+            return Return;
+        }
+
+        #endregion
+
+        #region CleanCodeMethods
+        public void Dispose()
+        {
+            if(!IsDisposed)
+                SerialPort.Dispose();
+        }
+
+        ~FingerPrintScaner()
+        {
+            if (!IsDisposed)
+                SerialPort.Dispose();
+        }
+        #endregion
     }
 }

@@ -9,19 +9,15 @@ namespace ZFM206SA50_FingerPrintScaner
 {
     public class ReadSystemParamReturn : BasicCommandReturn
     {
-        public SystemStatus StatusRegister;
-        public ushort SystemIdentifierCode;
-        public ushort FingerLibrarySize;
-        public SecurityLevels SecurityLevel;
-        public uint DeviceAddressFromStatus;
-        public PackageLength DataPackageSize;
-        public BaudRates BaudRate;
+        private ReadSystemParamReturn(){}
 
-
-        internal ReadSystemParamReturn()
-        {
-
-        }
+        public SystemStatus StatusRegister { private set; get; }
+        public ushort SystemIdentifierCode { private set; get; }
+        public ushort FingerLibrarySize { private set; get; }
+        public SecurityLevels SecurityLevel { private set; get; }
+        public uint DeviceAddressFromStatus { private set; get; }
+        public PackageLength DataPackageSize { private set; get; }
+        public BaudRates BaudRate { private set; get; }
 
 
         public static implicit operator ReadSystemParamReturn(RecievePackage Package)

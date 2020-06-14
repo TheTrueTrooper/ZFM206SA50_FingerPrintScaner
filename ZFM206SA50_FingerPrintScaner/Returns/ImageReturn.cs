@@ -11,6 +11,8 @@ namespace ZFM206SA50_FingerPrintScaner
 {
     public class ImageReturn : BasicCommandReturn
     {
+        private ImageReturn(){}
+
         public Image GrayScaleImage { private set; get; }
 
         public byte[] ImageBuffer { private set; get; }

@@ -9,6 +9,8 @@ namespace ZFM206SA50_FingerPrintScaner
 {
     public class StreamReturn : BasicCommandReturn
     {
+        private StreamReturn(){}
+
         public MemoryStream Stream { internal set; get; } = new MemoryStream();
 
         public static implicit operator StreamReturn(RecievePackage Package)

@@ -54,13 +54,6 @@ namespace FingerPrintReaderTestConsole
             //}
             #endregion
 
-            string ImageString = Settings.TestImageBlankWhite;
-            byte[] TestImage = new byte[ImageString.Length / 2];
-            for (int i = 0; i < ImageString.Length/2; i++)
-            {
-                TestImage[i] = Convert.ToByte(ImageString.Substring(i * 2, 2), 16);
-            }
-
             const ConsoleKey ScanFingerKey = ConsoleKey.S;
             const ConsoleKey ReadSystemParamKey = ConsoleKey.Q;
             const ConsoleKey UploadImageFingerKey = ConsoleKey.W;
@@ -120,7 +113,7 @@ namespace FingerPrintReaderTestConsole
                         break;
                     case UploadImageFingerKey:
                         {
-                            ImageReturn Package = Tester.UploadImage();
+                            ImageReturn Package = Tester.UploadImageToPC();
                             Console.WriteLine(ReturnMessage, "Upload Image", Package);
                             Application.Run(new Form1(Package.GrayScaleImage));
                             Console.ReadKey();
@@ -138,7 +131,7 @@ namespace FingerPrintReaderTestConsole
                                     }
                                     else
                                     {
-                                        BasicCommandReturn Package = Tester.DownloadImage(new Bitmap(OFD.FileName));
+                                        BasicCommandReturn Package = Tester.DownloadImageToSlave(new Bitmap(OFD.FileName));
                                         Console.WriteLine(ReturnMessage, "Download Image", Package);
                                         Console.ReadKey();
                                     }

@@ -8,16 +8,13 @@ namespace ZFM206SA50_FingerPrintScaner
 {
     public class BasicCommandReturn
     {
-        public uint DeviceAddress;
-        public bool Valid;
+        protected BasicCommandReturn(){}
+
+        public uint DeviceAddress { internal protected set; get; }
+        public bool Valid { internal protected set; get; }
 #pragma warning disable CS0414
-        public Errors Status;
+        public Errors Status { internal protected set; get; }
 #pragma warning restore CS0414
-
-        internal BasicCommandReturn()
-        {
-
-        }
 
         public static implicit operator BasicCommandReturn(RecievePackage Package)
         {

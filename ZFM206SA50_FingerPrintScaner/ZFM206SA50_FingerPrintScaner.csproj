@@ -42,8 +42,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BitConverterHelpers.cs" />
+    <Compile Include="Enums\ImageTemplateBuffers.cs" />
     <Compile Include="Enums\SystemStatus.cs" />
+    <Compile Include="Helpers\BitConverterHelpers.cs" />
+    <Compile Include="Helpers\StaticImageHelpers.cs" />
+    <Compile Include="Returns\RandomNumberReturn.cs" />
+    <Compile Include="Returns\MatchReturn.cs" />
+    <Compile Include="Returns\ReadNotePadReturn.cs" />
     <Compile Include="Returns\ReadValidTemplateCountReturn.cs" />
     <Compile Include="Returns\ImageReturn.cs" />
     <Compile Include="Returns\BasicCommandReturn.cs" />
@@ -59,7 +64,7 @@
     <Compile Include="Returns\ReadSystemParamReturn.cs" />
     <Compile Include="RecievePackage.cs" />
     <Compile Include="Returns\StreamReturn.cs" />
-    <Compile Include="StaticImageHelpers.cs" />
+    <Compile Include="Returns\SearchForMatchReturn.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ZFM-user-manualV15.pdf" />

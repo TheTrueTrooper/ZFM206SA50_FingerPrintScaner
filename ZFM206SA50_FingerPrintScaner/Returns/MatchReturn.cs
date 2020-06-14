@@ -6,20 +6,20 @@ using System.Threading.Tasks;
 
 namespace ZFM206SA50_FingerPrintScaner
 {
-    public class ReadValidTemplateCountReturn : BasicCommandReturn
+    public class MatchReturn : BasicCommandReturn
     {
-        private ReadValidTemplateCountReturn(){}
+        protected MatchReturn(){}
 
-        public ushort ValidTemplateCount { private set; get; }
+        public ushort MatchingScore { internal protected set; get; }
 
-        public static implicit operator ReadValidTemplateCountReturn(RecievePackage Package)
+        public static implicit operator MatchReturn(RecievePackage Package)
         {
-            return new ReadValidTemplateCountReturn()
+            return new MatchReturn()
             {
                 DeviceAddress = Package.DeviceAddress,
                 Valid = Package.Valid,
                 Status = (Errors)Package.Data[0],
-                ValidTemplateCount = BitConverterHelpers.GetU16(Package.Data, 1)
+                MatchingScore = BitConverterHelpers.GetU16(Package.Data, 1),
             };
         }
 
@@ -29,9 +29,10 @@ namespace ZFM206SA50_FingerPrintScaner
                 "For Device: {0}\n" +
                 "Status: {1}\n" +
                 "IsValid: {2}\n" +
-                "Valid Template Count: {3}\n";
+                "Matching Score: {3}\n";
 
-            return string.Format(ReturnBase, DeviceAddress.ToString("X4"), Status, Valid, ValidTemplateCount);
+            return string.Format(ReturnBase, DeviceAddress.ToString("X4"), Status, Valid, MatchingScore);
         }
+
     }
 }
