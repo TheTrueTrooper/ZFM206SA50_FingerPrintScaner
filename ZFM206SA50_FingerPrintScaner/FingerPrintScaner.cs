@@ -12,25 +12,56 @@ namespace ZFM206SA50_FingerPrintScaner
 {
     public class FingerPrintScaner : IDisposable
     {
+        /// <summary>
+        /// The default value that the device comes with for the baud rate
+        /// </summary>
         const int DefaultBaudRate = 57600;
 
+        /// <summary>
+        /// The serial port that we will be using
+        /// </summary>
         public SerialPort SerialPort;
         
         //start of message header with two bytes to mark the start
+        /// <summary>
+        /// the start of the devices messages
+        /// </summary>
         readonly byte[] Header = new byte[] { 0xEF, 0x01 };
 
         //default is 0xFFFFFFFF
+        /// <summary>
+        /// The address of the device
+        /// </summary>
         byte[] AddressBytes = new byte[] { 0xFF, 0xFF, 0xFF, 0xFF };
 
+        /// <summary>
+        /// Gets if the device has been disposed
+        /// </summary>
         bool IsDisposed = false;
 
-        public ulong Address => BitConverterHelpers.GetU16(AddressBytes, 0);
+        /// <summary>
+        /// Gets the address of the device as a readable int (should assume 0s at start)
+        /// </summary>
+        public uint Address => BitConverterHelpers.GetU32(AddressBytes, 0);
 
+        /// <summary>
+        /// Gets the current chunk size
+        /// </summary>
         public PackageLength DataPackageChunkSize { get; private set; }
 
+        /// <summary>
+        /// Gets the current baud rate as in the value in the enums name
+        /// </summary>
         public BaudRates BaudRate = BaudRates.BaudRateOf57600;
 
-        public FingerPrintScaner(string ComPort, uint? Address = null, BaudRates BaudRate = BaudRates.BaudRateOf57600, PackageLength DataPackageChunkSize = PackageLength.LengthOf128)
+        /// <summary>
+        /// Creates a serial connection and sets up the class to begin a connection
+        /// </summary>
+        /// <param name="ComPort"></param>
+        /// <param name="Address"></param>
+        /// <param name="BaudRate"></param>
+        /// <param name="DataPackageChunkSize"></param>
+        public FingerPrintScaner(string ComPort, uint? Address = null, BaudRates BaudRate = BaudRates.BaudRateOf57600, PackageLength DataPackageChunkSize = PackageLength.LengthOf128, bool OpenNow = true)
         {
             if (!Enum.IsDefined(typeof(BaudRates), BaudRate))
                 throw new Exception("BaudRate is not a valid baudrate!");
@@ -97,10 +128,33 @@ namespace ZFM206SA50_FingerPrintScaner
             this.DataPackageChunkSize = DataPackageChunkSize;
             SerialPort = new SerialPort(ComPort, BaudRateValue, Parity.None, 8, StopBits.One);
 
+            if(OpenNow)
+                SerialPort.Open();
+        }
+
+        /// <summary>
+        /// opens connection if closed. 
+        /// Note unless in constructor flag is set to false serial constructor will already have opened 
+        /// </summary>
+        public void OpenConnection()
+        {
             SerialPort.Open();
         }
 
+        /// <summary>
+        /// Closes connection if open;
+        /// </summary>
+        public void CloseConnection()
+        {
+            SerialPort.Close();
+        }
+
         #region BaseCommunicationMethods
+        /// <summary>
+        /// Sends a package
+        /// </summary>
+        /// <param name="Type">internal enum to mark package type</param>
+        /// <param name="Data">The data to send in pakage</param>
         void SendPacket(PIDs Type, byte[] Data)
         {
             byte[] Packet = new byte[Data.Length + 11];
@@ -138,6 +192,10 @@ namespace ZFM206SA50_FingerPrintScaner
             SerialPort.Write(Packet, 0, Packet.Length);
         }
 
+        /// <summary>
+        /// Gets a packages return
+        /// </summary>
+        /// <returns>The data package with the base decoded</returns>
         RecievePackage GetReturn()
         {
             byte[] Data = new byte[9];
@@ -177,6 +235,10 @@ namespace ZFM206SA50_FingerPrintScaner
             return new RecievePackage(PID, Address, Data, CheckSum);
         }
 
+        /// <summary>
+        /// Gets any stream like packages
+        /// </summary>
+        /// <returns>Returns package with the stream of the item</returns>
         StreamReturn GetStream()
         {
             StreamReturn Return = GetReturn();
@@ -192,14 +254,17 @@ namespace ZFM206SA50_FingerPrintScaner
             return Return;
         }
 
-        void SendDataStream(byte[] Data, PackageLength ChunkLength = PackageLength.LengthOf128)
+        /// <summary>
+        /// sends a package data like a stream to the device.
+        /// Note uses classes DataPackageChunkSize for data chunk sizes in a single transm
+        /// </summary>
+        /// <param name="Data">The data to send</param>
+        void SendDataStream(byte[] Data)
         {
-            if (!Enum.IsDefined(typeof(PackageLength), ChunkLength))
-                throw new Exception("Lenthis not a valid length");
             MemoryStream DataStream = new MemoryStream(Data);
             DataStream.Position = 0;
             int DataSize = 128;
-            switch(ChunkLength)
+            switch(this.DataPackageChunkSize)
             {
                 case PackageLength.LengthOf32:
                     DataSize = 32;
@@ -225,6 +290,11 @@ namespace ZFM206SA50_FingerPrintScaner
             SendPacket(PIDs.DataEndPacket, Chunk);
         }
 
+        /// <summary>
+        /// Sends a basic command to the device
+        /// </summary>
+        /// <param name="Command">The command op-code as an enum</param>
+        /// <param name="Data">Any data that goes with the command</param>
         void SendCommand(CommandCodes Command, byte[] Data = null)
         {
             byte[] Packet;
@@ -241,12 +311,21 @@ namespace ZFM206SA50_FingerPrintScaner
         #endregion
 
         #region BasicSystemCommandsMethods
+        /// <summary>
+        /// The fist command that should be sent with the device to ready it for any other commands
+        /// </summary>
+        /// <returns></returns>
         public BasicCommandReturn InitHandShake()
         {
             SendCommand(CommandCodes.InitHandShake, new byte[] { 0x00 });
             return GetReturn();
         }
 
+        /// <summary>
+        /// Sets the address in the device then sets it in the class to match
+        /// </summary>
+        /// <param name="Address">the new address to use</param>
+        /// <returns></returns>
         public BasicCommandReturn SetAddress(uint Address)
         {
             byte[] NewAddress = BitConverterHelpers.GetBytes32(Address);
@@ -255,18 +334,87 @@ namespace ZFM206SA50_FingerPrintScaner
             return GetReturn();
         }
 
+        /// <summary>
+        /// Sets a param 
+        /// </summary>
+        /// <param name="ParamNumber">the param to act on</param>
+        /// <param name="Contents">the value to set it to</param>
+        /// <returns></returns>
         BasicCommandReturn SetSystemParam(SystemParam ParamNumber, byte Contents)
         {
             SendCommand(CommandCodes.SetSystParam, new byte[] { (byte)ParamNumber, Contents });
             return GetReturn();
         }
 
+        /// <summary>
+        /// Sets the systems baud rate then sets 
+        /// </summary>
+        /// <param name="BaudRate"></param>
+        /// <returns></returns>
         public BasicCommandReturn SetSystemBaudRate(BaudRates BaudRate)
         {
             if (!Enum.IsDefined(typeof(BaudRates), BaudRate))
                 throw new Exception("BaudRate is not a valid baudrate!");
             this.BaudRate = BaudRate;
-            return SetSystemParam(SystemParam.BaudRate, (byte)BaudRate);
+            BasicCommandReturn Return = SetSystemParam(SystemParam.BaudRate, (byte)BaudRate);
+            if (Return.Status != Errors.Success || !Return.Valid)
+                return Return;
+            int BaudRateValue = DefaultBaudRate;
+            switch (BaudRate)
+            {
+                case BaudRates.BaudRateOf9600:
+                    BaudRateValue = 9600;
+                    BaudRate = BaudRates.BaudRateOf9600;
+                    break;
+                case BaudRates.BaudRateOf19200:
+                    BaudRateValue = 19200;
+                    BaudRate = BaudRates.BaudRateOf19200;
+                    break;
+                case BaudRates.BaudRateOf28800:
+                    BaudRateValue = 28800;
+                    BaudRate = BaudRates.BaudRateOf28800;
+                    break;
+                case BaudRates.BaudRateOf38400:
+                    BaudRateValue = 38400;
+                    BaudRate = BaudRates.BaudRateOf38400;
+                    break;
+                case BaudRates.BaudRateOf48000:
+                    BaudRateValue = 48000;
+                    BaudRate = BaudRates.BaudRateOf48000;
+                    break;
+                case BaudRates.BaudRateOf57600:
+                    BaudRateValue = 57600;
+                    BaudRate = BaudRates.BaudRateOf57600;
+                    break;
+                case BaudRates.BaudRateOf67200:
+                    BaudRateValue = 67200;
+                    BaudRate = BaudRates.BaudRateOf67200;
+                    break;
+                case BaudRates.BaudRateOf76800:
+                    BaudRateValue = 76800;
+                    BaudRate = BaudRates.BaudRateOf76800;
+                    break;
+                case BaudRates.BaudRateOf86400:
+                    BaudRateValue = 86400;
+                    BaudRate = BaudRates.BaudRateOf86400;
+                    break;
+                case BaudRates.BaudRateOf96000:
+                    BaudRateValue = 96000;
+                    BaudRate = BaudRates.BaudRateOf96000;
+                    break;
+                case BaudRates.BaudRateOf105600:
+                    BaudRateValue = 105600;
+                    BaudRate = BaudRates.BaudRateOf105600;
+                    break;
+                case BaudRates.BaudRateOf115200:
+                    BaudRateValue = 115200;
+                    BaudRate = BaudRates.BaudRateOf115200;
+                    break;
+            }
+            SerialPort.Close();
+            SerialPort.BaudRate = BaudRateValue;
+            SerialPort.Open();
+            return Return;
         }
 
         public BasicCommandReturn SetSystemSecurityLevel(SecurityLevels SecurityLevel)
@@ -310,16 +458,16 @@ namespace ZFM206SA50_FingerPrintScaner
             return GetStream();
         }
 
-        public BasicCommandReturn DownloadImageToSlave(Image Image, PackageLength ChunkLength = PackageLength.LengthOf128)
+        public BasicCommandReturn DownloadImageToSlave(Image Image)
         {
             if (Image.Height != StaticImageHelpers.ImageHieght && Image.Width != StaticImageHelpers.ImageWidth)
                 throw new Exception("Image is not the correct size. Image bust be 8 bits (one byte) per pixel in a 256 by 288 pixel canvas for 73,728 pixels and is assumed to be grey scaled image.");
 
             byte[] ImageBytes = StaticImageHelpers.GetBytesFromImage(Image);
-            return DownloadImageToSlave(ImageBytes, ChunkLength);
+            return DownloadImageToSlave(ImageBytes);
         }
 
-        public BasicCommandReturn DownloadImageToSlave(byte[] ImageBitmapAsBytes, PackageLength ChunkLength = PackageLength.LengthOf128, bool AlreadyCompressed = false)
+        public BasicCommandReturn DownloadImageToSlave(byte[] ImageBitmapAsBytes, bool AlreadyCompressed = false)
         {
             if(!AlreadyCompressed)
                 ImageBitmapAsBytes = StaticImageHelpers.GetCompressedImageBytes(ImageBitmapAsBytes);
@@ -328,7 +476,7 @@ namespace ZFM206SA50_FingerPrintScaner
             BasicCommandReturn Return = GetReturn();
             if (Return.Status != Errors.Success)
                 return Return;
-            SendDataStream(ImageBitmapAsBytes, ChunkLength);
+            SendDataStream(ImageBitmapAsBytes);
             return Return;
         }
         #endregion
@@ -352,22 +500,22 @@ namespace ZFM206SA50_FingerPrintScaner
             return GetStream();
         }
 
-        public BasicCommandReturn DownLoadImageTemplateToSlave(ImageTemplateBuffers DownloadToStoreBuffer, byte[] ImageTemplateBitmapAsBytes, PackageLength ChunkLength = PackageLength.LengthOf128)
+        public BasicCommandReturn DownLoadImageTemplateToSlave(ImageTemplateBuffers DownloadToStoreBuffer, byte[] ImageTemplateAsBytes)
         {
             SendCommand(CommandCodes.UploadImageTemplate, new byte[] { (byte)DownloadToStoreBuffer });
             BasicCommandReturn Return = GetReturn();
             if (Return.Status != Errors.Success)
                 return Return;
-            SendDataStream(ImageTemplateBitmapAsBytes, ChunkLength);
+            SendDataStream(ImageTemplateAsBytes);
             return Return;
         }
 
-        public BasicCommandReturn DownLoadImageTemplateToSlave(ImageTemplateBuffers DownloadToStoreBuffer, Stream ImageTemplateBitmapAsStream, PackageLength ChunkLength = PackageLength.LengthOf128)
+        public BasicCommandReturn DownLoadImageTemplateToSlave(ImageTemplateBuffers DownloadToStoreBuffer, Stream ImageTemplateAsStream)
         {
             MemoryStream ImageTemplateBitmapAsMemoryStream = new MemoryStream();
-            ImageTemplateBitmapAsStream.Position = 0;
-            ImageTemplateBitmapAsStream.CopyTo(ImageTemplateBitmapAsMemoryStream);
-            return DownLoadImageTemplateToSlave(DownloadToStoreBuffer, ImageTemplateBitmapAsMemoryStream.ToArray(), ChunkLength);
+            ImageTemplateAsStream.Position = 0;
+            ImageTemplateAsStream.CopyTo(ImageTemplateBitmapAsMemoryStream);
+            return DownLoadImageTemplateToSlave(DownloadToStoreBuffer, ImageTemplateBitmapAsMemoryStream.ToArray());
         }
 
         public BasicCommandReturn StoreOrSaveImageTemplateOnSlaveFlash(ImageTemplateBuffers StoreBufferToSaveToFlash, ushort PageIndex)
